@@ -12,7 +12,8 @@ function [anonFiles, notAnonFiles] = DICOMAnonymizer(DIR, ID)
 %       notAnonFiles: not anonymized files
 %
 %   TO-DO:
-%       Add attribUpdate and attribKeep as optional input and parse
+%       1. Warning: The attribute "PatientAdress" is not anonymized
+%       2. Add attribUpdate and attribKeep as optional input and parse
 %   
 % AUTHOR: Maximilian C. M. Fischer
 % 	mediTEC - Chair of Medical Engineering, RWTH Aachen University
