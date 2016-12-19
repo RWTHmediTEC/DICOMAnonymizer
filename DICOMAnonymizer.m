@@ -40,24 +40,27 @@ attribKeep = {'PatientSex', 'PatientAge', 'StudyID', 'StudyDescription', 'Series
     'StudyInstanceUID', 'SeriesInstanceUID'}; 
 
 % List all files in the directory and in all subdirectories
-files = rdir([DIR, '\**\**.*']);
-files = files(~[files.isdir]);
+files = dir([DIR, '\**\*.*']);
+files([files.isdir])=[];
+
 
 % Preallocation
-anonFiles = struct('name',[], 'date',[], 'bytes',[], 'isdir',[], 'datenum', []);
-notAnonFiles = struct('name',[], 'date',[], 'bytes',[], 'isdir',[], 'datenum', []);
+anonFiles = cell2struct(cell(size(fieldnames(files)')), fieldnames(files)', 2);
+notAnonFiles = cell2struct(cell(size(fieldnames(files)')), fieldnames(files)', 2);
 
 warning('off','all')
 for f=1:length(files)
-    try
+%     try
         % Try to anonymize file
-        dicomanon(files(f).name, files(f).name, ...
+        tempFile = fullfile(files(f).folder, files(f).name);
+        dicomanon(tempFile, tempFile, ...
             'keep', attribKeep, 'update', attribUpdate, 'UseVRHeuristic', false)
         anonFiles(f) = files(f);
-    catch
-        % If anonymization fails, add the file to the not anonymized files
-        notAnonFiles(f) = files(f);
-    end
+%     catch ME
+%         % If anonymization fails, add the file to the not anonymized files
+%         notAnonFiles(f) = files(f);
+%         ME
+%     end
 end
 warning('on','all')
 
