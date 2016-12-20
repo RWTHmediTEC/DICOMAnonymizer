@@ -28,8 +28,6 @@ parse(p,DIR,ID)
 DIR=p.Results.DIR;
 ID=p.Results.ID;
 
-addpath(genpath([fileparts(mfilename('fullpath')) '\src']))
-
 % Updated attributes
 attribUpdate.PatientName = ID;
 attribUpdate.PatientID = ID;
@@ -47,25 +45,31 @@ files([files.isdir])=[];
 % Preallocation
 anonFiles = cell2struct(cell(size(fieldnames(files)')), fieldnames(files)', 2);
 notAnonFiles = cell2struct(cell(size(fieldnames(files)')), fieldnames(files)', 2);
+anonError = struct('error', []);
 
 warning('off','all')
 for f=1:length(files)
-%     try
+    try
         % Try to anonymize file
         tempFile = fullfile(files(f).folder, files(f).name);
         dicomanon(tempFile, tempFile, ...
             'keep', attribKeep, 'update', attribUpdate, 'UseVRHeuristic', false)
         anonFiles(f) = files(f);
-%     catch ME
-%         % If anonymization fails, add the file to the not anonymized files
-%         notAnonFiles(f) = files(f);
-%         ME
-%     end
+    catch ME
+        % If anonymization fails, add the file to the not anonymized files
+        notAnonFiles(f) = files(f);
+        anonError(f).error = ME;
+    end
 end
 warning('on','all')
 
 % Remove empty fields
 anonFiles = anonFiles(arrayfun(@(x) ~isempty(x.name), anonFiles));
 notAnonFiles = notAnonFiles(arrayfun(@(x) ~isempty(x.name), notAnonFiles));
+anonError = anonError(arrayfun(@(x) ~isempty(x.error), anonError));
+
+% Copy the error
+names = [fieldnames(notAnonFiles); fieldnames(anonError)];
+notAnonFiles = cell2struct([struct2cell(notAnonFiles); struct2cell(anonError)], names, 1);
 
 end
