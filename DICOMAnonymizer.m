@@ -20,6 +20,8 @@ function [anonFiles, notAnonFiles] = DICOMAnonymizer(DIR, ID)
 % VERSION: 1.0
 % DATE: 2016-09-23
 
+addpath(genpath([fileparts([mfilename('fullpath'), '.m']) '\' 'src']))
+
 p = inputParser;
 addRequired(p,'DIR',@(x) isdir(x))
 addRequired(p, 'ID',@(x)validateattributes(x,{'char'},{'nonempty'},2))
@@ -48,6 +50,8 @@ notAnonFiles = cell2struct(cell(size(fieldnames(files)')), fieldnames(files)', 2
 anonError = struct('error', []);
 
 warning('off','all')
+textprogressbar('Anonymizing files:    ');
+progressbarvector=round((1:length(files))/length(files)*100);
 for f=1:length(files)
     try
         % Try to anonymize file
@@ -60,7 +64,9 @@ for f=1:length(files)
         notAnonFiles(f) = files(f);
         anonError(f).error = ME;
     end
+    textprogressbar(progressbarvector(f));
 end
+textprogressbar(' done');
 warning('on','all')
 
 % Remove empty fields
