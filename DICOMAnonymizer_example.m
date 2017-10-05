@@ -10,5 +10,7 @@ NewID = 'Subject1234';
 [anonFiles, notAnonFiles] = DICOMAnonymizer(DICOM_path, NewID);
 
 % Display the not anonyimzed files
-disp('Not anonyimzed files:')
-disp([{notAnonFiles.folder}', {notAnonFiles.name}'])
+if ~isempty(notAnonFiles)
+    disp('Not anonyimzed files:')
+    disp([{notAnonFiles.folder}', {notAnonFiles.name}'])
+end
