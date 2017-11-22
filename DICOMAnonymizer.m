@@ -1,48 +1,60 @@
-function [anonFiles, notAnonFiles] = DICOMAnonymizer(DIR, ID)
-%
-% DICOMANONYMIZER tries to anonymize all DICOM files in a directory
+function [anonFiles, notAnonFiles] = DICOMAnonymizer(DIR, varargin)
+%DICOMANONYMIZER tries to anonymize all DICOM files in a directory
 %   
-%   INPUT:
+%   REQUIRED INPUT:
 %       DIR: An attempt is being made to anonymize all DICOM files in this 
 %          directory and in all subdirectories
-%       ID: String to replace PatientName and PatientID
+%   OPTIONAL INPUT:
+%       'PatientName': Replace the attribute 'PatientName'. 
+%                      Default is 'Anonymous'.
+%       'PatientID': Replace the attribute 'PatientName'.
+%                    Default is 'Anonymous'.
+%       'SeriesDescription': Replace the attribute 'SeriesDescription'.
+%                            By default the old value is kept.
 %
 %   OUTPUT:
 %          anonFiles: anonymized files
 %       notAnonFiles: not anonymized files
 %
 %   TO-DO:
-%       1. Warning: The attribute "PatientAdress" is not anonymized
-%       2. Add attribUpdate and attribKeep as optional input and parse
+%       1. Warning: The attribute "PatientAdress" is not anonymized. This 
+%          bug has been reported to MATLAB.
+%       2. Add attribKeep as optional input and parse
 %   
 % AUTHOR: Maximilian C. M. Fischer
 % 	mediTEC - Chair of Medical Engineering, RWTH Aachen University
-% VERSION: 1.0
-% DATE: 2016-09-23
+% VERSION: 1.0.0
+% DATE: 2017-11-22
+% LICENSE: CC BY-SA 4.0
 
 addpath(genpath([fileparts([mfilename('fullpath'), '.m']) '\' 'src']))
 
 p = inputParser;
-addRequired(p,'DIR',@(x) isdir(x))
-addRequired(p, 'ID',@(x)validateattributes(x,{'char'},{'nonempty'},2))
-parse(p,DIR,ID)
+addRequired(p,'DIR',@isdir)
+addParameter(p,'PatientName','Anonymous', @(x)validateattributes(x,{'char'},{'nonempty'}))
+addParameter(p,'PatientID','Unknown', @(x)validateattributes(x,{'char'},{'nonempty'}))
+addParameter(p,'SeriesDescription',[], @(x) ischar(x) || isempty(x))
+parse(p,DIR,varargin{:})
 
 DIR=p.Results.DIR;
-ID=p.Results.ID;
 
 % Updated attributes
-attribUpdate.PatientName = ID;
-attribUpdate.PatientID = ID;
+attribUpdate.PatientName = p.Results.PatientName;
+attribUpdate.PatientID = p.Results.PatientID;
+if ~isempty(p.Results.SeriesDescription)
+    attribUpdate.SeriesDescription=p.Results.SeriesDescription;
+end
 
 % Kept attributes
-% StudyInstanceUID & SeriesInstanceUID keep the hierarchy of a set of dicom files
-attribKeep = {'PatientSex', 'PatientAge', 'StudyID', 'StudyDescription', 'SeriesDescription'...
-    'StudyInstanceUID', 'SeriesInstanceUID'}; 
+% StudyInstanceUID & SeriesInstanceUID keep the hierarchy of a set of DICOM files
+attribKeep = {'PatientSex', 'PatientAge', ...
+    'StudyDate', 'AcquisitionDate', 'ContentDate',...
+    'StudyTime', 'AcquisitionTime', 'ContentTime',...
+    'StudyID', 'StudyDescription','StudyInstanceUID', 'SeriesInstanceUID'}; 
 
 % List all files in the directory and in all subdirectories
 files = dir([DIR, '\**\*.*']);
 files([files.isdir])=[];
-
 
 % Preallocation
 anonFiles = cell2struct(cell(size(fieldnames(files)')), fieldnames(files)', 2);
