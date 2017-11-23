@@ -7,8 +7,8 @@ function [anonFiles, notAnonFiles] = DICOMAnonymizer(DIR, varargin)
 %   OPTIONAL INPUT:
 %       'PatientName': Replace the attribute 'PatientName'. 
 %                      Default is 'Anonymous'.
-%       'PatientID': Replace the attribute 'PatientName'.
-%                    Default is 'Anonymous'.
+%       'PatientID': Replace the attribute 'PatientID'.
+%                    Default is 'Unknown'.
 %       'SeriesDescription': Replace the attribute 'SeriesDescription'.
 %                            By default the old value is kept.
 %
@@ -16,7 +16,7 @@ function [anonFiles, notAnonFiles] = DICOMAnonymizer(DIR, varargin)
 %          anonFiles: anonymized files
 %       notAnonFiles: not anonymized files
 %
-%   TO-DO:
+%   TODO:
 %       1. Warning: The attribute "PatientAdress" is not anonymized. This 
 %          bug has been reported to MATLAB.
 %       2. Add attribKeep as optional input and parse
