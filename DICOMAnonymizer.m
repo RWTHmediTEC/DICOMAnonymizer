@@ -23,9 +23,10 @@ function [anonFiles, notAnonFiles] = DICOMAnonymizer(DIR, varargin)
 %   
 % AUTHOR: Maximilian C. M. Fischer
 % 	mediTEC - Chair of Medical Engineering, RWTH Aachen University
-% VERSION: 1.0.2
+% VERSION: 1.0.3
 % DATE: 2017-11-22
-% LICENSE: CC BY-SA 4.0
+% LICENSE: Modified BSD License (BSD license with non-military-use clause)
+%
 
 addpath(genpath([fileparts([mfilename('fullpath'), '.m']) '\' 'src']))
 
