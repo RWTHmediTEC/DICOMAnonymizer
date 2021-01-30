@@ -23,15 +23,15 @@ function [anonFiles, notAnonFiles] = DICOMAnonymizer(DIR, varargin)
 %   
 % AUTHOR: Maximilian C. M. Fischer
 % 	mediTEC - Chair of Medical Engineering, RWTH Aachen University
-% VERSION: 1.0.3
-% DATE: 2017-11-22
+% VERSION: 1.0.4
+% DATE: 2021-01-30
 % LICENSE: Modified BSD License (BSD license with non-military-use clause)
 %
 
 addpath(genpath([fileparts([mfilename('fullpath'), '.m']) '\' 'src']))
 
 p = inputParser;
-addRequired(p,'DIR',@isdir)
+addRequired(p,'DIR',@isfolder)
 addParameter(p,'PatientName','Anonymous', @(x)validateattributes(x,{'char'},{'nonempty'}))
 addParameter(p,'PatientID','Unknown', @(x)validateattributes(x,{'char'},{'nonempty'}))
 addParameter(p,'SeriesDescription',[], @(x) ischar(x) || isempty(x))
@@ -39,19 +39,21 @@ parse(p,DIR,varargin{:})
 
 DIR=p.Results.DIR;
 
-% Updated attributes
-attribUpdate.PatientName = p.Results.PatientName;
-attribUpdate.PatientID = p.Results.PatientID;
-if ~isempty(p.Results.SeriesDescription)
-    attribUpdate.SeriesDescription=p.Results.SeriesDescription;
-end
-
 % Kept attributes
 % StudyInstanceUID & SeriesInstanceUID keep the hierarchy of a set of DICOM files
 attribKeep = {'PatientSex', 'PatientAge', ...
     'StudyDate', 'AcquisitionDate', 'ContentDate',...
     'StudyTime', 'AcquisitionTime', 'ContentTime',...
     'StudyID', 'StudyDescription','StudyInstanceUID', 'SeriesInstanceUID'}; 
+
+% Updated attributes
+attribUpdate.PatientName = p.Results.PatientName;
+attribUpdate.PatientID = p.Results.PatientID;
+if isempty(p.Results.SeriesDescription)
+    attribKeep = [attribKeep, 'SeriesDescription'];
+else
+    attribUpdate.SeriesDescription=p.Results.SeriesDescription;
+end
 
 % List all files in the directory and in all subdirectories
 files = dir([DIR, '\**\*.*']);
