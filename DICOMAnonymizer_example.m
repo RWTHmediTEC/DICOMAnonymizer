@@ -15,5 +15,8 @@ PatientID = '1234';
 % Display the not anonymized files
 if ~isempty(notAnonFiles)
     disp('Not anonymized files:')
-    disp([{notAnonFiles.folder}', {notAnonFiles.name}'])
+    for f=1:length(notAnonFiles)
+        disp([fullfile(notAnonFiles(f).folder, notAnonFiles.name) ...
+            ' - ' notAnonFiles(f).error.message])
+    end
 end

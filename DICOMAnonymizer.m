@@ -2,8 +2,10 @@ function [anonFiles, notAnonFiles] = DICOMAnonymizer(DIR, varargin)
 %DICOMANONYMIZER tries to anonymize all DICOM files in a directory
 %   
 %   REQUIRED INPUT:
-%       DIR: An attempt is being made to anonymize all DICOM files in this 
-%          directory and in all subdirectories
+%       DIR: An attempt is being made to anonymize (depersonalize, 
+%            deidentify) all DICOM files in this directory and in all 
+%            subdirectories. The function is a wrapper for MATLAB's 
+%            dicomanon function.
 %   OPTIONAL INPUT:
 %       'PatientName': Replace the attribute 'PatientName'. 
 %                      Default is 'Anonymous'.
@@ -11,10 +13,15 @@ function [anonFiles, notAnonFiles] = DICOMAnonymizer(DIR, varargin)
 %                    Default is 'Unknown'.
 %       'SeriesDescription': Replace the attribute 'SeriesDescription'.
 %                            By default the old value is kept.
+%       'EmptyIconImageSequence': In case the anonymization fails due to
+%                                 the error 'Attribute (7FE0,0010) has 
+%                                 wrong data type.' set this parameter to
+%                                 'true' and try again. Default is 'false'.
 %
-%   OUTPUT:
-%          anonFiles: anonymized files
-%       notAnonFiles: not anonymized files
+%   OUTPUT: Structs with the file details:
+%       - anonFiles: anonymized files.
+%       - notAnonFiles: not anonymized files. Contains the error for each
+%                       file why the anonymization was not successful.
 %
 %   TODO:
 %       1. Warning: The attribute "PatientAdress" is not anonymized. This 
@@ -23,18 +30,20 @@ function [anonFiles, notAnonFiles] = DICOMAnonymizer(DIR, varargin)
 %   
 % AUTHOR: Maximilian C. M. Fischer
 % 	mediTEC - Chair of Medical Engineering, RWTH Aachen University
-% VERSION: 1.0.4
-% DATE: 2021-01-30
+% VERSION: 1.0.5
+% DATE: 2024-08-10
 % LICENSE: Modified BSD License (BSD license with non-military-use clause)
 %
 
 addpath(genpath([fileparts([mfilename('fullpath'), '.m']) '\' 'src']))
 
 p = inputParser;
+logParValidFunc=@(x) (islogical(x) || isequal(x,1) || isequal(x,0));
 addRequired(p,'DIR',@isfolder)
 addParameter(p,'PatientName','Anonymous', @(x)validateattributes(x,{'char'},{'nonempty'}))
 addParameter(p,'PatientID','Unknown', @(x)validateattributes(x,{'char'},{'nonempty'}))
 addParameter(p,'SeriesDescription',[], @(x) ischar(x) || isempty(x))
+addParameter(p,'EmptyIconImageSequence',false,logParValidFunc)
 parse(p,DIR,varargin{:})
 
 DIR=p.Results.DIR;
@@ -55,11 +64,16 @@ else
     attribUpdate.SeriesDescription=p.Results.SeriesDescription;
 end
 
+if p.Results.EmptyIconImageSequence
+    % Clear attribute IconImageSequence
+    attribUpdate.IconImageSequence = [];
+end
+
 % List all files in the directory and in all subdirectories
 files = dir([DIR, '\**\*.*']);
 files([files.isdir])=[];
 
-% Preallocation
+% Pre-allocation
 anonFiles = cell2struct(cell(size(fieldnames(files)')), fieldnames(files)', 2);
 notAnonFiles = cell2struct(cell(size(fieldnames(files)')), fieldnames(files)', 2);
 anonError = struct('error', []);
